@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D body;
     private Animator animator;
     private bool grounded = false;
+    private bool groundedAfterAttack = true;
     private bool combatIdle = false;
     private bool isDead = false;
     private float initialXScale;
@@ -25,7 +26,7 @@ public class PlayerMovement : MonoBehaviour
     {
         float horizontalInput = Input.GetAxis("Horizontal");
 
-        if (!isAttacking())
+        if (!isAttacking() && groundedAfterAttack)
         {
             body.velocity = new Vector2(horizontalInput * speed, body.velocity.y);
             animator.SetFloat("AirSpeed", body.velocity.y);
@@ -37,7 +38,7 @@ public class PlayerMovement : MonoBehaviour
         } else
         {
             //stop moving while attacking
-            body.velocity = Vector2.zero;
+            body.velocity = new Vector2(0f, body.velocity.y);
         }
 
         // -- Handle Animations --
@@ -59,7 +60,7 @@ public class PlayerMovement : MonoBehaviour
         //Attack
         else if (Input.GetMouseButtonDown(0))
         {
-            animator.SetTrigger("Attack");
+            Attack();
         }
 
         //Change between idle and combat idle
@@ -93,11 +94,21 @@ public class PlayerMovement : MonoBehaviour
         body.velocity = new Vector2(body.velocity.x, jumpForce);
     }
 
+    private void Attack()
+    {
+        animator.SetTrigger("Attack");
+        if (!grounded)
+        {
+            groundedAfterAttack = false;
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.tag == "Ground")
         {
             grounded = true;
+            groundedAfterAttack = true;
             animator.SetBool("Grounded", grounded);
         }
     }
